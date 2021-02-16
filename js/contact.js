@@ -1,51 +1,73 @@
 $(function () {
-    'use strict';
+  var Email = {
+    send: function (a) {
+      return new Promise(function (n, e) {
+        (a.nocache = Math.floor(1e6 * Math.random() + 1)), (a.Action = "Send");
+        var t = JSON.stringify(a);
+        Email.ajaxPost("https://smtpjs.com/v3/smtpjs.aspx?", t, function (e) {
+          n(e);
+        });
+      });
+    },
+    ajaxPost: function (e, n, t) {
+      var a = Email.createCORSRequest("POST", e);
+      a.setRequestHeader("Content-type", "application/x-www-form-urlencoded"),
+        (a.onload = function () {
+          var e = a.responseText;
+          null != t && t(e);
+        }),
+        a.send(n);
+    },
+    ajax: function (e, n) {
+      var t = Email.createCORSRequest("GET", e);
+      (t.onload = function () {
+        var e = t.responseText;
+        null != n && n(e);
+      }),
+        t.send();
+    },
+    createCORSRequest: function (e, n) {
+      var t = new XMLHttpRequest();
+      return (
+        "withCredentials" in t
+          ? t.open(e, n, !0)
+          : "undefined" != typeof XDomainRequest
+          ? (t = new XDomainRequest()).open(e, n)
+          : (t = null),
+        t
+      );
+    },
+  };
 
-    // init the validator
-    // validator files are included in the download package
-    // otherwise download from http://1000hz.github.io/bootstrap-validator
+  ("use strict");
 
-    $('#contact-form').validator();
+  $("#contact-form").validator();
 
+  // when the form is submitted
+  $("#contact-form").on("submit", function (e) {
+    // if the validator does not prevent form submit
+    if (!e.isDefaultPrevented()) {
+      var name = $("#contact-form")[0].elements["form_name"].value;
+      var email = $("#contact-form")[0].elements["form_email"].value;
+      var message = $("#contact-form")[0].elements["form_message"].value;
 
-    // when the form is submitted
-    $('#contact-form').on('submit', function (e) {
+      $("#send-email-button")[0].disabled = true;
+      $("#loading-send-email-icon").removeClass("hide");
 
-        // if the validator does not prevent form submit
-        if (!e.isDefaultPrevented()) {
-            var url = "contact.php";
+      Email.send({
+        SecureToken: "f2ea529f-fe46-42a9-8767-ea724918ed94",
+        To: "vitorhugojf9@gmail.com",
+        From: `${name} - ${email}`,
+        Subject: "Portfolio Contact",
+        Body: message,
+      }).then(() => {
+        $("#loading-send-email-icon").addClass("hide");
+        $("#send-email-button")[0].disabled = false;
 
-            var name = $('#contact-form')[0].elements["form_name"].value;
-            var email = $('#contact-form')[0].elements["form_email"].value;
-            var message = $('#contact-form')[0].elements["form_message"].value;
-            
-            debugger
-            // POST values in the background the the script URL
-            $.ajax({
-                type: "POST",
-                url: url,
-                data: $(this).serialize(),
-                success: function (data)
-                {
-                    // data = JSON object that contact.php returns
+        $("#alert").modal("show");
+      });
 
-                    // we recieve the type of the message: success x danger and apply it to the 
-                    var messageAlert = 'alert-' + data.type;
-                    var messageText = data.message;
-
-                    // let's compose Bootstrap alert box HTML
-                    var alertBox = '<div class="alert ' + messageAlert + ' alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + messageText + '</div>';
-                    
-                    // If we have messageAlert and messageText
-                    if (messageAlert && messageText) {
-                        // inject the alert to .messages div in our form
-                        $('#contact-form').find('.messages').html(alertBox);
-                        // empty the form
-                        $('#contact-form')[0].reset();
-                    }
-                }
-            });
-            return false;
-        }
-    })
+      return false;
+    }
+  });
 });
