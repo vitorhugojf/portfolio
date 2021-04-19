@@ -55,7 +55,7 @@ $(function () {
       $("#loading-send-email-icon").removeClass("hide");
 
       Email.send({
-        SecureToken: "f2ea529f-fe46-42a9-8767-ea724918ed94",
+        SecureToken: "9b39df1f-3390-48db-a57e-ea490a86fa54",
         To: "vitorhugojf9@gmail.com",
         From: `${name} - ${email}`,
         Subject: "Portfolio Contact",
